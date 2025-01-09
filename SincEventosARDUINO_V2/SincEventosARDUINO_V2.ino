@@ -19,7 +19,7 @@ int posImprimirMatriz=0;
 unsigned long tempoUltimaImpressao = 0;
 
 void setup() {
-  Serial.begin(9600)
+  Serial.begin(9600);
 
   // Vamos programar os BotoesOut
   for (int i=0; i< numero_botoesOUT;i++)
@@ -33,8 +33,8 @@ void setup() {
   }
 
   // Aloca memória para a TABELA
-  TABELAEVENTOS_botoes=malloc(TamanhoMaxDaTabela * sizeof(int));
-  TABELAEVENTOS_tempo=malloc(TamanhoMaxDaTabela * sizeof(unsigned long));
+  TABELAEVENTOS_botoes=(int *)malloc(TamanhoMaxDaTabela * sizeof(int));
+  TABELAEVENTOS_tempo=(unsigned long *)malloc(TamanhoMaxDaTabela * sizeof(unsigned long));
 
 }
 

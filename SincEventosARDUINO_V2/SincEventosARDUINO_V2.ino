@@ -1,6 +1,6 @@
 #define numero_botoes 4
 #define numero_botoesOUT 2
-#define TamanhoMaxDaTabela 10000
+#define TamanhoMaxDaTabela 100000
 #define BlinkTimeInterval 1000
 #define DEBOUNCE_TIME 50  // Tempo mínimo entre leituras válidas (em milissegundos)
 

@@ -55,7 +55,7 @@ void sharedISR() {
 
 // Função para imprimir a matriz
 void imprimirMatriz() {
-  Serial.println("Imprimindo matriz:");
+  Serial.println("Imprimindo matriz:")
   for (int i = 0; i < countTabela; i++) {
     Serial.print("Botão ");
     Serial.print(TABELAEVENTOS_botoes[i]);

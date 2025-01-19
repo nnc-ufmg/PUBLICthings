@@ -1,12 +1,16 @@
+#include <SPI.h>
+#include <SD.h>
+
 #define numero_botoes 3
-#define TamanhoMaxDaTabela 10000
+#define TamanhoMaxDaTabela 100
 #define DEBOUNCE_TIME 70
 #define BlinkTimeInterval 1000
 #define numero_botoesOUT 2
 
-
-int botoes[numero_botoes] = {52, 50, 48};  // Pinos dos botões
+const int chipSelect = 38; //pino CS do cartão
+int botoes[numero_botoes] = {42, 40, 48};  // Pinos dos botões
 int botoesOUT[numero_botoesOUT] = {55, 53};  // Pinos de saída para LED
+
 int TABELAEVENTOS_botoes[TamanhoMaxDaTabela];
 unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela];
 long int countTabela = 0;
@@ -14,17 +18,23 @@ unsigned long tempoUltimaLeitura[numero_botoes] = {0, 0};
 unsigned long tempoAtual = 0;
 unsigned long tempoBLINK = 0;
 bool bBlinkState = false;
-bool estadoAnterior[numero_botoes] = {LOW,LOW};
+bool estadoAnterior[numero_botoes] = {LOW, LOW};
 unsigned long tempoUltimaLeituraTabela = 0;
 bool estadoAnteriorBotao13 = LOW;
 bool estadoAtual;
-
-int posImprimirMatriz = 0;
+File dataFile;
 
 void setup() {
   Serial.begin(9600);
 
-  // Programar os pinos de saída para o LED
+  // Inicializa o cartão SD
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Falha ao conectar com o cartao SD");
+    return;
+  }
+  Serial.println("Cartao SD conectado");
+
+  // Configura os pinos de saída para LED
   for (int i = 0; i < numero_botoesOUT; i++) {
     pinMode(botoesOUT[i], OUTPUT);
   }
@@ -34,10 +44,15 @@ void setup() {
     pinMode(botoes[i], INPUT);
   }
 
-
+  pinMode(46, INPUT);  // Botão para impressão
   
-
-  pinMode(46, INPUT);  // Botão de impressão
+  // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
+  dataFile = SD.open("datalog.txt", FILE_WRITE);
+  if (dataFile) {
+    Serial.println("Arquivo aberto para gravação.");
+  } else {
+    Serial.println("Falha ao abrir o arquivo.");
+  }
 }
 
 void ler_botoes() {
@@ -45,17 +60,29 @@ void ler_botoes() {
     estadoAtual = digitalRead(botoes[i]);
     if (estadoAtual == HIGH && estadoAnterior[i] == LOW) {
       if ((tempoAtual - tempoUltimaLeitura[i]) > DEBOUNCE_TIME) {
-       Serial.print("O botão ");
+        Serial.print("O botão ");
         Serial.print(i);
-        Serial.println(" foi pressionado");
-
+        Serial.print(" foi pressionado: ");
+        Serial.println(tempoAtual);
+        // Registra o evento do botão
         tempoUltimaLeitura[i] = tempoAtual;
         TABELAEVENTOS_botoes[countTabela] = i;
         TABELAEVENTOS_tempo[countTabela] = tempoAtual;
         countTabela++;
+
+        // Escreve os dados no arquivo
+        if (dataFile) {
+          dataFile.print(tempoAtual);  // Tempo em unidades de 100 ms
+          dataFile.print("\t");
+          dataFile.print(i);  // Botão pressionado
+          dataFile.println();
+        } else {
+          // Verifique se a gravação falhou
+          Serial.println("Falha ao gravar no arquivo.");
+        }
       }
     }
-    estadoAnterior[i] = estadoAtual;
+    estadoAnterior[i] = estadoAtual;  // Atualiza o estado anterior do botão
   }
 }
 
@@ -69,23 +96,43 @@ void imprimirMatriz() {
   }
 }
 
+void verificarConteudoDoArquivo() {
+  Serial.println("Verificando conteúdo do arquivo");
+  
+  if (dataFile) {  // Verifica se o arquivo foi aberto corretamente
+    // Posiciona o ponteiro de leitura no início do arquivo
+    dataFile.seek(0);
+    
+    Serial.println("Conteúdo do arquivo:");
+    while (dataFile.available()) {
+      Serial.write(dataFile.read());  // Lê e imprime o conteúdo
+    }
+   
+  } else {
+    Serial.println("Falha ao abrir o arquivo para leitura.");
+  }
+}
+
+
 void loop() {
   tempoAtual = millis();
   ler_botoes();
-  
+
   // Controle do LED com intervalo de blink
   if ((tempoBLINK + BlinkTimeInterval) < millis()) {
     tempoBLINK = millis();
-    digitalWrite(botoesOUT[1], bBlinkState);  // Controla o LED no pino 10
+    digitalWrite(botoesOUT[1], bBlinkState);  // Controla o LED no pino 53
     bBlinkState = !bBlinkState;
   }
 
+  // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
   if ((tempoAtual - tempoUltimaLeituraTabela) > DEBOUNCE_TIME) {
     estadoAtual = digitalRead(46);
     if (estadoAtual == HIGH && estadoAnteriorBotao13 == LOW) {
-      imprimirMatriz();
-      tempoUltimaLeituraTabela = tempoAtual;  // Atualiza o tempo da última leitura do botão
+      verificarConteudoDoArquivo();  // Chama a função para verificar o conteúdo
+      //imprimirMatriz();
+      tempoUltimaLeituraTabela = tempoAtual;
     }
-    estadoAnteriorBotao13 = estadoAtual;  // Atualiza o estado anterior do botão 13
+    estadoAnteriorBotao13 = estadoAtual;
   }
 }

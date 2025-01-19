@@ -1,14 +1,14 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define numero_botoes 3
+#define numero_botoes 5
 #define TamanhoMaxDaTabela 100
 #define DEBOUNCE_TIME 70
 #define BlinkTimeInterval 1000
 #define numero_botoesOUT 2
 
 const int chipSelect = 38; //pino CS do cartão
-int botoes[numero_botoes] = {42, 40, 48};  // Pinos dos botões
+int botoes[numero_botoes] = {42, 40, 48, 36, 34};  // Pinos dos botões
 int botoesOUT[numero_botoesOUT] = {55, 53};  // Pinos de saída para LED
 
 int TABELAEVENTOS_botoes[TamanhoMaxDaTabela];
@@ -18,7 +18,7 @@ unsigned long tempoUltimaLeitura[numero_botoes] = {0, 0};
 unsigned long tempoAtual = 0;
 unsigned long tempoBLINK = 0;
 bool bBlinkState = false;
-bool estadoAnterior[numero_botoes] = {LOW, LOW};
+bool estadoAnterior[numero_botoes] = {LOW, LOW, LOW, LOW};
 unsigned long tempoUltimaLeituraTabela = 0;
 bool estadoAnteriorBotao13 = LOW;
 bool estadoAtual;
@@ -44,7 +44,7 @@ void setup() {
     pinMode(botoes[i], INPUT);
   }
 
-  pinMode(46, INPUT);  // Botão para impressão
+  pinMode(46, INPUT);  // Botão para impressão 
   
   // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
   dataFile = SD.open("datalog.txt", FILE_WRITE);
@@ -56,6 +56,7 @@ void setup() {
 }
 
 void ler_botoes() {
+  
   for (int i = 0; i < numero_botoes; i++) {
     estadoAtual = digitalRead(botoes[i]);
     if (estadoAtual == HIGH && estadoAnterior[i] == LOW) {
@@ -85,7 +86,6 @@ void ler_botoes() {
     estadoAnterior[i] = estadoAtual;  // Atualiza o estado anterior do botão
   }
 }
-
 void imprimirMatriz() {
   Serial.println("Imprimindo tabela:");
   for (int i = 0; i < countTabela; i++) {

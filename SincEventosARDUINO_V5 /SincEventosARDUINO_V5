@@ -48,11 +48,32 @@ void setup() {
   pinMode(46, INPUT);  // Botão para impressão 
   
   // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
-  dataFile = SD.open("datalog.txt", FILE_WRITE);
+  dataFile = SD.open("datalog.csv", FILE_WRITE);
   if (dataFile) {
     Serial.println("Arquivo aberto para gravação.");
   } else {
     Serial.println("Falha ao abrir o arquivo.");
+  }
+}
+
+void gravarTabelaNoCartao() {
+  if (dataFile) {
+    Serial.println("Gravando dados no cartão SD...");
+
+    for (int i = 0; i < countTabela; i++) {
+      dataFile.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
+      dataFile.print(",");                     // Separador CSV
+      dataFile.print(TABELAEVENTOS_botoes[i]); // Número do botão pressionado
+      dataFile.println();                      // Nova linha
+    }
+    
+    dataFile.flush();  // Garante que os dados sejam gravados imediatamente
+    Serial.println("Dados gravados e tabela limpa.");
+
+    // Limpa a tabela
+    countTabela = 0;
+  } else {
+    Serial.println("Erro ao gravar no cartão SD.");
   }
 }
 
@@ -76,11 +97,8 @@ void ler_botoes() {
         countTabela++;
 
         // Escreve os dados no arquivo
-        if (dataFile) {
-          dataFile.print(tempoAtual);  // Tempo em unidades de 100 ms
-          dataFile.print("\t");
-          dataFile.print(i);  // Botão pressionado
-          dataFile.println();
+        if (countTabela > 5) {
+            gravarTabelaNoCartao(); 
         } else {
           // Verifique se a gravação falhou
           Serial.println("Falha ao gravar no arquivo.");

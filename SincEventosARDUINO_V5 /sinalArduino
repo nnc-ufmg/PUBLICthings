@@ -1,4 +1,4 @@
-#define pinoEmissor1 2  // Pino de envio 1
+#define pinoEmissor1 2  // Pino  de envio 1
 #define pinoEmissor2 3  // Pino de envio 2
 #define pinoBotao 11    // Pino do botão
 #define DEBOUNCE_TIME 70
@@ -11,37 +11,36 @@ unsigned long tempoAtual = 0;  // Tempo atual
 void setup() {
   Serial.begin(9600);  // Inicializa a comunicação serial para depuração
 
-  // Configura os pinos de envio como saídas
   pinMode(pinoEmissor1, OUTPUT);
   pinMode(pinoEmissor2, OUTPUT);
-  pinMode(pinoBotao, INPUT);  // Configura o pino do botão como entrada
+  pinMode(pinoBotao, INPUT);  // Usa resistor de pull-up interno
 }
 
 void loop() {
-  // Lê o estado do botão
-  estadoAtual = digitalRead(pinoBotao);
+  tempoAtual = millis();
+  estadoAtual = !digitalRead(pinoBotao);  // Inverte a leitura por causa do INPUT_PULLUP
 
-  // Verifica se o botão foi pressionado e se o tempo de debounce passou
-  if (estadoAtual == HIGH && estadoAnterior == LOW && (tempoAtual - tempoUltimaLeitura) > DEBOUNCE_TIME) {
-    // Envia dois sinais HIGH simultaneamente
-    digitalWrite(pinoEmissor1, HIGH);
-    digitalWrite(pinoEmissor2, HIGH);
+  // Verifica se o botão foi pressionado
+  if (estadoAtual && !estadoAnterior) {
+    if ((tempoAtual - tempoUltimaLeitura) > DEBOUNCE_TIME) {
+      Serial.print("O botão foi pressionado em: ");
+      Serial.println(tempoAtual);
 
-    Serial.println("Botão pressionado! Enviando HIGH em ambos os pinos...");
-
-    // Atualiza o tempo da última leitura
-    tempoUltimaLeitura = tempoAtual;
-  } else {
-    // Se o botão não for pressionado, envia LOW
-    digitalWrite(pinoEmissor1, LOW);
-    digitalWrite(pinoEmissor2, LOW);
-
-    Serial.println("Aguardando pressionamento do botão...");
+      digitalWrite(pinoEmissor1, HIGH);
+      digitalWrite(pinoEmissor2, HIGH);
+      tempoUltimaLeitura = tempoAtual;
+    }
   }
 
-  // Atualiza o estado anterior do botão
-  estadoAnterior = estadoAtual;
+  // Verifica se o botão foi solto
+  if (!estadoAtual && estadoAnterior) {
+    if ((tempoAtual - tempoUltimaLeitura) > DEBOUNCE_TIME) {
+      digitalWrite(pinoEmissor1, LOW);
+      digitalWrite(pinoEmissor2, LOW);
+      tempoUltimaLeitura = tempoAtual;
+    }
+  }
 
-  // Atualiza o tempo atual
-  tempoAtual = millis();
+  // Atualiza o estado anterior
+  estadoAnterior = estadoAtual;
 }

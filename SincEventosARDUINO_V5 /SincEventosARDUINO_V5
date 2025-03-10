@@ -1,17 +1,21 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define numero_botoes 5
+#define numero_botoes 4
 #define TamanhoMaxDaTabela 100
 #define DEBOUNCE_TIME 70
 #define BlinkTimeInterval 1000
 #define numero_botoesOUT 3
 
-const int chipSelect = 38; //pino CS do cartão
-int botoes[numero_botoes] = {4, 3, 18, 19, 20};  // Pinos dos botões
-int botoesOUT[numero_botoesOUT] = {55, 53, 2};  // Pinos de saída para LED
+//TABELAS
+int botoesOUT[numero_botoesOUT] = {2, 3};  // Pinos de saída para LED
+String TABELAEVENTOS_botoes[numero_botoes][TamanhoMaxDaTabela];
 
-int TABELAEVENTOS_botoes[TamanhoMaxDaTabela];
+const int chipSelect = 38; //pino CS do cartão
+int botoes[numero_botoes] = {18, 19, 20, 21};  // Pinos dos botões
+
+bool eventoJaRegistrado = false;
+int contagem = 0;
 unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela];
 long int countTabela = 0;
 unsigned long tempoUltimaLeitura[numero_botoes] = {0, 0}; 
@@ -27,30 +31,35 @@ int tempoLED=0;
 
 void setup() {
   Serial.begin(9600);
-
-  // Inicializa o cartão SD
+   // Inicializa a tabela com "-"
+  for (int i = 0; i < numero_botoes; i++) {
+    for (int j = 0; j < TamanhoMaxDaTabela; j++) {
+      TABELAEVENTOS_botoes[i][j] = "-";
+    }
+  }
+  // Inicializa o cartão SD
   if (!SD.begin(chipSelect)) {
     Serial.println("Falha ao conectar com o cartao SD");
     return;
   }
   Serial.println("Cartao SD conectado");
 
-  // Configura os pinos de saída para LED
+  // Configura os pinos de saída para LED
   for (int i = 0; i < numero_botoesOUT; i++) {
     pinMode(botoesOUT[i], OUTPUT);
   }
 
-  // Configura os pinos dos botões como entradas
+  // Configura os pinos dos botões como entradas
   for (int i = 0; i < numero_botoes; i++) {
     pinMode(botoes[i], INPUT);
   }
 
-  pinMode(46, INPUT);  // Botão para impressão 
+  pinMode(46, INPUT);  // Botão para impressão 
   
-  // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
+  // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
   dataFile = SD.open("datalog.csv", FILE_WRITE);
   if (dataFile) {
-    Serial.println("Arquivo aberto para gravação.");
+    Serial.println("Arquivo aberto para gravação.");
   } else {
     Serial.println("Falha ao abrir o arquivo.");
   }
@@ -58,13 +67,18 @@ void setup() {
 
 void gravarTabelaNoCartao() {
   if (dataFile) {
-    Serial.println("Gravando dados no cartão SD...");
+    Serial.println("Gravando dados no cartão SD...");
 
     for (int i = 0; i < countTabela; i++) {
       dataFile.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
-      dataFile.print(",");                     // Separador CSV
-      dataFile.print(TABELAEVENTOS_botoes[i]); // Número do botão pressionado
-      dataFile.println();                      // Nova linha
+      dataFile.print(",");   
+      for(int j = 0; j < numero_botoes; j++) { // Separador CSV
+        dataFile.print(TABELAEVENTOS_botoes[j][i]);
+        if (j < numero_botoes - 1) {
+          dataFile.print(","); // Adiciona vírgula apenas entre os valores
+        }
+      }
+      dataFile.println(); 
     }
     
     dataFile.flush();  // Garante que os dados sejam gravados imediatamente
@@ -73,69 +87,80 @@ void gravarTabelaNoCartao() {
     // Limpa a tabela
     countTabela = 0;
   } else {
-    Serial.println("Erro ao gravar no cartão SD.");
-  }
-}
-
-void ler_botoes() {
-  
-  for (int i = 0; i < numero_botoes; i++) {
-    estadoAtual = digitalRead(botoes[i]);
-    if (estadoAtual == HIGH && estadoAnterior[i] == LOW) {
-      if ((tempoAtual - tempoUltimaLeitura[i]) > DEBOUNCE_TIME) {
-        digitalWrite(2, HIGH);
-        tempoLED = 10000;
-
-        Serial.print("O botão ");
-        Serial.print(i);
-        Serial.print(" foi pressionado: ");
-        Serial.println(tempoAtual);
-        // Registra o evento do botão
-        tempoUltimaLeitura[i] = tempoAtual;
-        TABELAEVENTOS_botoes[countTabela] = i;
-        TABELAEVENTOS_tempo[countTabela] = tempoAtual;
-        countTabela++;
-
-        // Escreve os dados no arquivo
-        if (countTabela > 5) {
-            gravarTabelaNoCartao(); 
-        } else {
-          // Verifique se a gravação falhou
-          Serial.println("Falha ao gravar no arquivo.");
-        }
-      }
-    }
-    else {
-      if(tempoLED > 0){
-        digitalWrite(2, HIGH);
-        tempoLED --;
-      }else{
-        digitalWrite(2, LOW);
-      }
-    }
-    estadoAnterior[i] = estadoAtual;  // Atualiza o estado anterior do botão
+    Serial.println("Erro ao gravar no cartão SD.");
   }
 }
 void imprimirMatriz() {
   Serial.println("Imprimindo tabela:");
+  
   for (int i = 0; i < countTabela; i++) {
-    Serial.print("Botão ");
-    Serial.print(TABELAEVENTOS_botoes[i]);
-    Serial.print(" Pressionado em: ");
-    Serial.println(TABELAEVENTOS_tempo[i]);
+    Serial.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
+    Serial.print("\t");   
+    for (int j = 0; j < numero_botoes; j++) {  // Separador CSV
+      Serial.print(TABELAEVENTOS_botoes[j][i]); // Número do botão pressionado
+      Serial.print("\t");  // Inserir tabulação após cada valor
+    }
+    Serial.println();  // Adicionar uma nova linha após todos os botões
   }
 }
+void ler_botoes() {
+   // Escreve os dados no arquivo se necessário
+   if (contagem > 7) {
+      imprimirMatriz();
+      contagem = 0;
+    //  gravarTabelaNoCartao(); 
+   }
+   eventoJaRegistrado = false;
+    for (int i = 0; i < numero_botoes; i++) {
+        estadoAtual = digitalRead(botoes[i]);
+
+        if (estadoAtual == HIGH && estadoAnterior[i] == LOW) {
+            if ((tempoAtual - tempoUltimaLeitura[i]) > DEBOUNCE_TIME) {
+                digitalWrite(3, HIGH);
+                tempoLED = 10000;
+
+                Serial.print("A entrada digital ");
+                Serial.print(i);
+                Serial.print(" foi pressionada: ");
+                Serial.println(tempoAtual);
+
+                if (TABELAEVENTOS_tempo[countTabela - 1] == tempoAtual) {
+                    eventoJaRegistrado = true;
+                    TABELAEVENTOS_botoes[i][countTabela - 1] = estadoAtual;
+                }
+
+                if (!eventoJaRegistrado && countTabela < TamanhoMaxDaTabela) {
+                    tempoUltimaLeitura[i] = tempoAtual;
+                    TABELAEVENTOS_tempo[countTabela] = tempoAtual;
+                    TABELAEVENTOS_botoes[i][countTabela] = 1;
+                    countTabela++;
+                    contagem++;
+  
+                }
+            }
+        } else {
+            if (tempoLED > 0) {
+                digitalWrite(2, HIGH);
+                tempoLED--;
+            } else {
+                digitalWrite(2, LOW);
+            }
+        }
+        estadoAnterior[i] = estadoAtual;
+    }
+}
+
 
 void verificarConteudoDoArquivo() {
-  Serial.println("Verificando conteúdo do arquivo");
+  Serial.println("Verificando conteúdo do arquivo");
   
   if (dataFile) {  // Verifica se o arquivo foi aberto corretamente
-    // Posiciona o ponteiro de leitura no início do arquivo
+    // Posiciona o ponteiro de leitura no início do arquivo
     dataFile.seek(0);
     
-    Serial.println("Conteúdo do arquivo:");
+    Serial.println("Conteúdo do arquivo:");
     while (dataFile.available()) {
-      Serial.write(dataFile.read());  // Lê e imprime o conteúdo
+      Serial.write(dataFile.read());  // Lê e imprime o conteúdo
     }
    
   } else {
@@ -155,11 +180,11 @@ void loop() {
     bBlinkState = !bBlinkState;
   }
 
-  // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
+  // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
   if ((tempoAtual - tempoUltimaLeituraTabela) > DEBOUNCE_TIME) {
     estadoAtual = digitalRead(46);
     if (estadoAtual == HIGH && estadoAnteriorBotao13 == LOW) {
-      verificarConteudoDoArquivo();  // Chama a função para verificar o conteúdo
+      verificarConteudoDoArquivo();  // Chama a função para verificar o conteúdo
       //imprimirMatriz();
       tempoUltimaLeituraTabela = tempoAtual;
     }

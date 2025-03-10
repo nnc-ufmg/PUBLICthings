@@ -1,0 +1,58 @@
+A entrada digital 3 foi pressionada: 2189
+A entrada digital 2 foi pressionada: 2199
+A entrada digital 0 foi pressionada: 2210
+A entrada digital 1 foi pressionada: 2210
+A entrada digital 0 foi pressionada: 4200
+A entrada digital 1 foi pressionada: 4200
+A entrada digital 3 foi pressionada: 8181
+A entrada digital 1 foi pressionada: 8192
+A entrada digital 0 foi pressionada: 8204
+A entrada digital 2 foi pressionada: 10182
+A entrada digital 1 foi pressionada: 10182
+A entrada digital 3 foi pressionada: 12182
+A entrada digital 0 foi pressionada: 12192
+A entrada digital 1 foi pressionada: 12192
+A entrada digital 1 foi pressionada: 14183
+A entrada digital 2 foi pressionada: 16174
+A entrada digital 1 foi pressionada: 16184
+A entrada digital 0 foi pressionada: 16198
+A entrada digital 3 foi pressionada: 20165
+A entrada digital 0 foi pressionada: 20175
+A entrada digital 1 foi pressionada: 20175
+A entrada digital 0 foi pressionada: 22166
+A entrada digital 1 foi pressionada: 22166
+A entrada digital 3 foi pressionada: 24157
+A entrada digital 2 foi pressionada: 24167
+A entrada digital 0 foi pressionada: 24181
+A entrada digital 1 foi pressionada: 24181
+A entrada digital 0 foi pressionada: 26168
+A entrada digital 3 foi pressionada: 30149
+A entrada digital 0 foi pressionada: 30159
+A entrada digital 1 foi pressionada: 30159
+A entrada digital 0 foi pressionada: 32150
+
+Imprimindo tabela:
+2189	-	-	-	1	
+2199	-	-	1	-	
+2210	1	1	-	-	
+4200	1	1	-	-	
+8181	-	-	-	1	
+8192	-	1	-	-	
+8204	1	-	-	-	
+10182	-	1	1	-	
+12182	-	-	-	1	
+12192	1	1	-	-	
+14183	-	1	-	-	
+16174	-	-	1	-	
+16184	-	1	-	-	
+16198	1	-	-	-	
+20165	-	-	-	1
+20175	1	1	-	-	
+22166	1	1	-	-	
+24157	-	-	-	1	
+24167	-	-	1	-	
+24181	1	1	-	-	
+26168	1	-	-	-	
+30149	-	-	-	1	
+30159	1	1	-	-	
+32150	1	-	-	-

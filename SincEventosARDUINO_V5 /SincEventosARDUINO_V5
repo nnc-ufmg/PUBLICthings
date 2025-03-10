@@ -86,10 +86,17 @@ void gravarTabelaNoCartao() {
 
     // Limpa a tabela
     countTabela = 0;
+    for (int i = 0; i < numero_botoes; i++) {
+    for (int j = 0; j < TamanhoMaxDaTabela; j++) {
+      TABELAEVENTOS_botoes[i][j] = "-";
+    }
+  }
   } else {
     Serial.println("Erro ao gravar no cartão SD.");
   }
 }
+
+
 void imprimirMatriz() {
   Serial.println("Imprimindo tabela:");
   
@@ -106,9 +113,9 @@ void imprimirMatriz() {
 void ler_botoes() {
    // Escreve os dados no arquivo se necessário
    if (contagem > 7) {
-      imprimirMatriz();
+    //  imprimirMatriz();
       contagem = 0;
-    //  gravarTabelaNoCartao(); 
+      gravarTabelaNoCartao(); 
    }
    eventoJaRegistrado = false;
     for (int i = 0; i < numero_botoes; i++) {

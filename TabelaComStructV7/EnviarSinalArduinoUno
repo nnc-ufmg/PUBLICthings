@@ -1,0 +1,122 @@
+#define pinoEmissor1 2  // Pino de envio 1 HIGH/LOW
+#define pinoEmissor2 3  // Pino de envio 2 HIGH/LOW
+#define pinoEmissor3 4  // Pino de envio 3 HIGH/LOW (PULSO DO POTENCIÔMETRO)
+#define pinoEmissor4 5  // Pino de envio 4 HIGH/LOW
+#define pinoEmissor5 6 //pino que envia a onda
+#define DEBOUNCE_TIME 70
+#define saidaPWM 10
+
+unsigned long tempoUltimoSinal1 = 0;  // Armazena o último tempo em que o sinal foi enviado (2 segundos)
+unsigned long tempoUltimoSinal2 = 0;  // Armazena o último tempo em que o sinal foi enviado (7 segundos)
+unsigned long tempoUltimaOnda = 0;   // Armazena o tempo da última onda
+unsigned long tempoUltimoSinal4 = 0;  // Armazena o último tempo em que o sinal foi enviado para pinoEmissor4
+const unsigned long intervaloSinal1 = 2000;  // Intervalo de 2 segundos para os pinos 1 e 2
+const unsigned long intervaloSinal2 = 7000;  // Intervalo de 7 segundos para o pino 4
+const unsigned long intervaloOnda = 3000;    // Intervalo de 3 segundos para a onda
+const unsigned long intervaloSinal4 = 3000;  // Intervalo de 3 segundos para o pino 4
+
+
+void setup() {
+  Serial.begin(9600);  // Inicializa a comunicação serial para depuração
+  pinMode(saidaPWM, OUTPUT);
+
+  
+  pinMode(pinoEmissor1, OUTPUT);
+  pinMode(pinoEmissor2, OUTPUT);
+  pinMode(pinoEmissor3, OUTPUT);
+  pinMode(pinoEmissor4, OUTPUT);
+  pinMode(pinoEmissor5, OUTPUT);
+}
+
+void enviarSinalPotenciometro() {
+  unsigned long tempoAtual = millis();  // Obtém o tempo atual em milissegundos
+
+  // Verifica se passaram 7 segundos desde o último sinal
+  if (tempoAtual - tempoUltimoSinal2 >= intervaloSinal2) {
+    digitalWrite(pinoEmissor3, HIGH);  // Envia o sinal no pino 4 (ligado)
+    delay(100);  // Mantém o sinal por 100 ms
+    digitalWrite(pinoEmissor3, LOW);  // Desliga o sinal no pino 4
+    tempoUltimoSinal2 = tempoAtual;  // Atualiza o tempo do último sinal
+  }
+}
+
+void enviarSinaisaCadaDoisSegundosJuntos() {
+  unsigned long tempoAtual = millis();  // Obtém o tempo atual em milissegundos
+
+  // Verifica se passaram 2 segundos desde o último sinal
+  if (tempoAtual - tempoUltimoSinal1 >= intervaloSinal1) {
+    // Envia HIGH para os pinos por 2 segundos
+    digitalWrite(pinoEmissor1, HIGH);
+    digitalWrite(pinoEmissor2, HIGH);
+    delay(2000);  // Delay de 2 segundos
+
+    // Envia LOW para os pinos por 2 segundos
+    digitalWrite(pinoEmissor1, LOW);
+    digitalWrite(pinoEmissor2, LOW);
+    tempoUltimoSinal1 = tempoAtual;  // Atualiza o tempo do último sinal
+  }
+}
+
+void enviarSinaisComDiferencaDeUmMilissegundo() {
+  // Envia HIGH para pinoEmissor1
+  digitalWrite(pinoEmissor1, HIGH);
+  delay(1);  // Aguarda 1 milissegundo
+
+  // Envia HIGH para pinoEmissor2
+  digitalWrite(pinoEmissor2, HIGH);
+
+  // Aguarda 2 segundos com ambos os pinos em HIGH
+  delay(2000);  // Delay de 2 segundos
+
+  // Envia LOW para pinoEmissor1
+  digitalWrite(pinoEmissor1, LOW);
+
+  // Aguarda 1 milissegundo antes de desligar o pinoEmissor2
+  delay(1);  // Aguarda 1 milissegundo
+
+  // Envia LOW para pinoEmissor2
+  digitalWrite(pinoEmissor2, LOW);
+
+  // Aguarda 2 segundos com ambos os pinos em LOW
+  delay(2000);  // Delay de 2 segundos
+}
+
+void enviarOnda(){
+
+    tone(pinoEmissor5, 50);  // Gera uma onda quadrada de 50 Hz
+
+}
+
+void enviarSinalPino4() {
+  unsigned long tempoAtual = millis();  // Obtém o tempo atual em milissegundos
+
+  // Verifica se passaram 3 segundos desde o último sinal
+  if (tempoAtual - tempoUltimoSinal4 >= intervaloSinal4) {
+    digitalWrite(pinoEmissor4, HIGH);  // Envia o sinal no pinoEmissor4 (ligado)
+    delay(100);  // Mantém o sinal por 100 ms
+    digitalWrite(pinoEmissor4, LOW);  // Desliga o sinal no pinoEmissor4
+    tempoUltimoSinal4 = tempoAtual;  // Atualiza o tempo do último sinal
+  }
+}
+
+void loop() {
+  unsigned long tempoAtual = millis();  // Obtém o tempo atual
+
+  // Função 1 - Enviar sinal de 2 segundos para os pinos
+  if (tempoAtual - tempoUltimoSinal1 >= intervaloSinal1) {
+    enviarSinaisaCadaDoisSegundosJuntos();  // Envia os sinais nos pinos
+    tempoUltimoSinal1 = tempoAtual;  // Atualiza o tempo do último sinal
+  }
+
+  // Função 2 - Enviar sinal de potenciômetro (pino 4) a cada 7 segundos
+  if (tempoAtual - tempoUltimoSinal2 >= intervaloSinal2) {
+    enviarSinalPotenciometro();  // Envia o sinal no pino 4
+    tempoUltimoSinal2 = tempoAtual;  // Atualiza o tempo do último sinal
+  }
+
+  // Função 3 - Enviar onda a cada 3 segundos
+  enviarOnda();
+
+  // Função 4 - Enviar sinal no pino 4 a cada 3 segundos
+  enviarSinalPino4();  // Envia o sinal no pino 4
+}

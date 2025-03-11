@@ -3,22 +3,9 @@ const int pino2 = 3;
 const int pino3 = 4;
 const int pino4 = 5;
 
-const int tempo1 = 2000;  // 2 segundos
-const int tempo2 = 3000;  // 3 segundos
-const int tempo3 = 5000;  // 5 segundos
-const int tempo4 = 3500;  // 7 segundos
 
-const int duracaoHigh = 500;  // Tempo que o sinal fica HIGH (500ms)
-
-unsigned long ultimoTempo1 = 0;
-unsigned long ultimoTempo2 = 0;
-unsigned long ultimoTempo3 = 0;
-unsigned long ultimoTempo4 = 0;
-
-bool estado1 = false;
-bool estado2 = false;
-bool estado3 = false;
-bool estado4 = false;
+unsigned long tempoAnterior4 = 0;
+const int duracaoHigh = 2000; // 2 segundos
 
 void setup() {
   pinMode(pino1, OUTPUT);
@@ -27,38 +14,23 @@ void setup() {
   pinMode(pino4, OUTPUT);
 }
 
+void enviarSinalPino3(){
+  digitalWrite(pino3, HIGH);
+  delay(duracaoHigh);
+  digitalWrite(pino3, LOW);
+}
+void enviarSinalPinos1e2() {
+    digitalWrite(pino1, HIGH);
+    digitalWrite(pino2, HIGH);
+    delay(duracaoHigh); // Mantém HIGH por 2 segundos
+    digitalWrite(pino1, LOW);
+    digitalWrite(pino2, LOW);
+}
+
+
+
 void loop() {
-  unsigned long tempoAtual = millis();
-
-  // Pino 1 - HIGH a cada 2 segundos
-  if ((tempoAtual - ultimoTempo1 >= tempo1) || (estado1 && tempoAtual - ultimoTempo1 >= duracaoHigh)) {
-    estado1 = !estado1;
-        Serial.println("Enviou");
-    digitalWrite(pino1, estado1);
-    if (!estado1) ultimoTempo1 = tempoAtual;
-  }
-
-  // Pino 2 - HIGH a cada 3 segundos
-  if ((tempoAtual - ultimoTempo2 >= tempo2) || (estado2 && tempoAtual - ultimoTempo2 >= duracaoHigh)) {
-    estado2 = !estado2;
-        Serial.println("Enviou");
-    digitalWrite(pino2, estado2);
-    if (!estado2) ultimoTempo2 = tempoAtual;
-  }
-
-  // Pino 3 - HIGH a cada 5 segundos
-  if ((tempoAtual - ultimoTempo3 >= tempo3) || (estado3 && tempoAtual - ultimoTempo3 >= duracaoHigh)) {
-    estado3 = !estado3;
-        Serial.println("Enviou");
-    digitalWrite(pino3, estado3);
-    if (!estado3) ultimoTempo3 = tempoAtual;
-  }
-
-  // Pino 4 - HIGH a cada 7 segundos
-  if ((tempoAtual - ultimoTempo4 >= tempo4) || (estado4 && tempoAtual - ultimoTempo4 >= duracaoHigh)) {
-    Serial.println("Enviou");
-    estado4 = !estado4;
-    digitalWrite(pino4, estado4);
-    if (!estado4) ultimoTempo4 = tempoAtual;
-  }
+  enviarSinalPinos1e2();
+    delay(2000); 
+  enviarSinalPino3();
 }

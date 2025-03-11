@@ -1,25 +1,43 @@
-//ENVIANDO DOIS SINAIS AO MESMO TEMPO
+//ENVIANDO DOIS SINAIS AO MESMO TEMPO E UM EM TEMPO DIFERENTE
 
-A entrada digital 0 foi pressionada: 2081
-A entrada digital 1 foi pressionada: 2081
-A entrada digital 0 foi pressionada: 6063
-A entrada digital 1 foi pressionada: 6063
-A entrada digital 0 foi pressionada: 10044
-A entrada digital 1 foi pressionada: 10044
-A entrada digital 1 foi pressionada: 14025
-A entrada digital 0 foi pressionada: 14026
-A entrada digital 0 foi pressionada: 18007
-A entrada digital 1 foi pressionada: 18007
-A entrada digital 0 foi pressionada: 21988
-A entrada digital 1 foi pressionada: 21988
-A entrada digital 0 foi pressionada: 25969
-A entrada digital 1 foi pressionada: 25969
+A entrada digital 3 foi pressionada: 92
+A entrada digital 0 foi pressionada: 2082
+A entrada digital 1 foi pressionada: 2082
+A entrada digital 3 foi pressionada: 6064
+A entrada digital 0 foi pressionada: 8054
+A entrada digital 1 foi pressionada: 8054
+A entrada digital 3 foi pressionada: 12036
+A entrada digital 1 foi pressionada: 14026
+A entrada digital 0 foi pressionada: 14027
+A entrada digital 3 foi pressionada: 18008
 Imprimindo tabela:
-2081	1	1	-	-	
-6063	1	1	-	-	
-10044	1	1	-	-	
-14025	-	1	-	-	
-14026	1	-	-	-	
-18007	1	1	-	-	
-21988	1	1	-	-	
-25969	1	1	-	-
+92	-	-	-	1	
+2082	1	1	-	-	
+6064	-	-	-	1	
+8054	1	1	-	-	
+12036	-	-	-	1	
+14026	-	1	-	-	
+14027	1	-	-	-	
+18008	-	-	-	1
+
+//OUTRO EXEMPLO
+A entrada digital 3 foi pressionada: 614
+A entrada digital 0 foi pressionada: 2606
+A entrada digital 1 foi pressionada: 2606
+A entrada digital 3 foi pressionada: 6587
+A entrada digital 0 foi pressionada: 8578
+A entrada digital 1 foi pressionada: 8578
+A entrada digital 3 foi pressionada: 12559
+A entrada digital 1 foi pressionada: 14550
+A entrada digital 0 foi pressionada: 14550
+A entrada digital 3 foi pressionada: 18531
+A entrada digital 1 foi pressionada: 20521
+Imprimindo tabela:
+614	0	-	-	-	
+2606	-	1	-	3	
+6587	0	-	-	-	
+8578	-	1	-	3	
+12559	-	1	-	-	
+14550	0	-	-	3	
+18531	-	1	-	-	
+20521	-	-	-	-	

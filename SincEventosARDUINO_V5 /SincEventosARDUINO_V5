@@ -3,7 +3,7 @@
 
   #define NUMERO_PINOS_DIGITAIS 4 
   #define TamanhoMaxDaTabela 100
-  #define DEBOUNCE_TIME 10
+  #define DEBOUNCE_TIME 70
   #define BlinkTimeInterval 1000
   #define intervaloLED_piscar 5000
   #define numero_botoesOUT 2

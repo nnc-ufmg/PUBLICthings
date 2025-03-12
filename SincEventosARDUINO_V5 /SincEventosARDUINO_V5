@@ -3,7 +3,7 @@
 
 #define NUMERO_PINOS_DIGITAIS 4 
 #define TamanhoMaxDaTabela 100
-#define DEBOUNCE_TIME 70
+#define DEBOUNCE_TIME 10
 #define BlinkTimeInterval 1000
 #define numero_botoesOUT 2
 
@@ -41,7 +41,11 @@ bool estadoAnteriorBotao13 = LOW;
 bool estadoAtual;
 bool eventoJaRegistrado = false;
 File dataFile;
-
+void imprimirCartaoSD();
+void gravarTabelaNoCartao();
+void imprimirMatriz();
+void lerEntradasDigitais();
+void verificarConteudoDoArquivo();
 
 void setup() {
   Serial.begin(9600);
@@ -83,6 +87,13 @@ void setup() {
 
 }
 
+void ledVERDE(){
+  if ((tempoAtual - tempoBLINK) >= BlinkTimeInterval) {
+    tempoBLINK = tempoAtual;  // Atualiza o tempo da última troca
+    bBlinkState = !bBlinkState;  // Alterna o estado do LED
+    digitalWrite(2, bBlinkState);  // Liga/desliga o LED
+  }
+}
 
 void gravarTabelaNoCartao() {
   if (dataFile) {
@@ -109,6 +120,7 @@ void gravarTabelaNoCartao() {
     Serial.println("Erro ao gravar no cartão SD.");
   }
 }
+
 void imprimirMatriz() {
   Serial.println("Imprimindo tabela:");
   
@@ -135,9 +147,9 @@ void imprimirMatriz() {
 void lerEntradasDigitais() {
    // Escreve os dados no arquivo se necessário
    if (contagem > 7) {
-      imprimirMatriz();
+      //imprimirMatriz();
       contagem = 0;
-    //  gravarTabelaNoCartao(); 
+      gravarTabelaNoCartao(); 
    }
    eventoJaRegistrado = false;
     for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
@@ -178,46 +190,36 @@ void lerEntradasDigitais() {
     }
 }
 
-
-
-void verificarConteudoDoArquivo() {
-  Serial.println("Verificando conteúdo do arquivo");
-  
-  if (dataFile) {  // Verifica se o arquivo foi aberto corretamente
-    // Posiciona o ponteiro de leitura no início do arquivo
-    dataFile.seek(0);
-    
-    Serial.println("Conteúdo do arquivo:");
-    while (dataFile.available()) {
-      Serial.write(dataFile.read());  // Lê e imprime o conteúdo
-    }
-   
-  } else {
-    Serial.println("Falha ao abrir o arquivo para leitura.");
-  }
-}
-
-
-void loop() {
-  tempoAtual = millis();
-
- lerEntradasDigitais();
-  
- // Verifica se passou 1 segundo desde a última troca de estado do LED
-  if ((tempoAtual - tempoBLINK) >= BlinkTimeInterval) {
-    tempoBLINK = tempoAtual;  // Atualiza o tempo da última troca
-    bBlinkState = !bBlinkState;  // Alterna o estado do LED
-    digitalWrite(2, bBlinkState);  // Liga/desliga o LED
-  }
-
-  // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
+void imprimirCartaoSD() {
+  // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
   if ((tempoAtual - tempoUltimaLeituraTabela) > DEBOUNCE_TIME) {
     estadoAtual = digitalRead(46);
     if (estadoAtual == HIGH && estadoAnteriorBotao13 == LOW) {
-      verificarConteudoDoArquivo();  // Chama a função para verificar o conteúdo
-      //imprimirMatriz();
+      Serial.println("Verificando conteúdo do arquivo");
+
+      if (dataFile) {  // Verifica se o arquivo foi aberto corretamente
+        // Posiciona o ponteiro de leitura no início do arquivo
+        dataFile.seek(0);
+
+        Serial.println("Conteúdo do arquivo:");
+        while (dataFile.available()) {
+          Serial.write(dataFile.read());  // Lê e imprime o conteúdo
+        }
+      } else {
+        Serial.println("Falha ao abrir o arquivo para leitura.");
+      }
+
       tempoUltimaLeituraTabela = tempoAtual;
     }
     estadoAnteriorBotao13 = estadoAtual;
   }
+}
+
+void loop() {
+  tempoAtual = millis();
+
+  lerEntradasDigitais();
+  void ledVERDE();
+  imprimirCartaoSD();
+
 } 

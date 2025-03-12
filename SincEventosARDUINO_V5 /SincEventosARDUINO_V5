@@ -1,34 +1,45 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define numero_entradas 4
+#define NUMERO_PINOS_DIGITAIS 4 
 #define TamanhoMaxDaTabela 100
 #define DEBOUNCE_TIME 70
 #define BlinkTimeInterval 1000
-#define numero_botoesOUT 3
+#define numero_botoesOUT 2
+
+//LED verde pisca quando entra no loop
+//LED vermelho pisca quando recebe um sinal 
+//pino 2 do UNO envia para o pino 19 do MEGA
+//pino 3 do UNO envia para o pino 18 do MEGA
+//pino 4 do UNO envia para o pino 21 do MEGA (PULSO DO POTENCIOMETRO)
+//pino 5 do UNO envia para o pino 20 do MEGA (PULSO DA ONDA QUADRADA)
+
+
+const int entradaAnalogica3 = A2; // Pino do potenciômetro
+const int chipSelect = 38; //pino CS do cartão
+
 
 //TABELAS
+int pinosDigitais[NUMERO_PINOS_DIGITAIS ] = {18, 19, 20, 21};  // Pinos dos botões
 int botoesOUT[numero_botoesOUT] = {2, 3};  // Pinos de saída para LED
-int botoes[ numero_entradas] = {18, 19, 20, 21};  // Pinos dos botões
-String TABELAEVENTOS_entradas[numero_entradas][TamanhoMaxDaTabela];
+unsigned long tempoUltimaLeitura[NUMERO_PINOS_DIGITAIS ] = {0}; 
+String TABELAEVENTOS_botoes[NUMERO_PINOS_DIGITAIS][TamanhoMaxDaTabela];
+unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela];
 
-//pino CS do cartão
-const int chipSelect = 38; 
-
-//variáveis
+//VARIÁVEIS 
+const unsigned long intervalo3 = 7000; // 7 segundos
+unsigned long ultimaLeitura3 = 0;
+unsigned long tempoAtual = 0;
+unsigned long tempoBLINK = 1000;
+unsigned long tempoUltimaLeituraTabela = 0;
+long int countTabela = 0;
 int tempoLED=0;
 int contagem = 0;
-long int countTabela = 0;
-unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela];
-unsigned long tempoUltimaLeituraTabela = 0;
-unsigned long tempoUltimaLeitura[numero_entradas] = {0, 0}; 
-unsigned long tempoAtual = 0;
-unsigned long tempoBLINK = 0;
 bool bBlinkState = false;
-bool estadoAnterior[ numero_entradas] = {LOW, LOW, LOW, LOW};
+bool estadoAnterior[NUMERO_PINOS_DIGITAIS ] = {LOW, LOW, LOW, LOW};
 bool estadoAnteriorBotao13 = LOW;
-bool eventoJaRegistrado = false;
 bool estadoAtual;
+bool eventoJaRegistrado = false;
 File dataFile;
 
 
@@ -36,9 +47,9 @@ void setup() {
   Serial.begin(9600);
 
   // Inicializa a tabela com "-"
-  for (int i = 0; i <  numero_entradas; i++) {
+  for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
     for (int j = 0; j < TamanhoMaxDaTabela; j++) {
-      TABELAEVENTOS_entradas[i][j] = "-";
+      TABELAEVENTOS_botoes[i][j] = "-";
     }
   }
 
@@ -55,9 +66,10 @@ void setup() {
   }
 
   // Configura os pinos dos botões como entradas
-  for (int i = 0; i <  numero_entradas; i++) {
-    pinMode(botoes[i], INPUT);
+  for (int i = 0; i < NUMERO_PINOS_DIGITAIS ; i++) {
+    pinMode( pinosDigitais[i], INPUT);
   }
+
 
   pinMode(46, INPUT);  // Botão para impressão 
   
@@ -68,7 +80,9 @@ void setup() {
   } else {
     Serial.println("Falha ao abrir o arquivo.");
   }
+
 }
+
 
 void gravarTabelaNoCartao() {
   if (dataFile) {
@@ -77,9 +91,9 @@ void gravarTabelaNoCartao() {
     for (int i = 0; i < countTabela; i++) {
       dataFile.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
       dataFile.print(",");   
-      for(int j = 0; j < numero_entradas; j++) { // Separador CSV
-        dataFile.print(TABELAEVENTOS_entradas[j][i]);
-        if (j < numero_entradas - 1) {
+      for(int j = 0; j < NUMERO_PINOS_DIGITAIS; j++) { // Separador CSV
+        dataFile.print(TABELAEVENTOS_botoes[j][i]);
+        if (j < NUMERO_PINOS_DIGITAIS - 1) {
           dataFile.print(","); // Adiciona vírgula apenas entre os valores
         }
       }
@@ -91,45 +105,43 @@ void gravarTabelaNoCartao() {
 
     // Limpa a tabela
     countTabela = 0;
-    for (int i = 0; i <  numero_entradas; i++) {
-    for (int j = 0; j < TamanhoMaxDaTabela; j++) {
-      TABELAEVENTOS_entradas[i][j] = "-";
-    }
-
-  }
   } else {
     Serial.println("Erro ao gravar no cartão SD.");
   }
 }
-
-
 void imprimirMatriz() {
   Serial.println("Imprimindo tabela:");
   
   for (int i = 0; i < countTabela; i++) {
     Serial.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
     Serial.print("\t");   
-    for (int j = 0; j <  numero_entradas; j++) {  // Separador CSV
-      Serial.print(TABELAEVENTOS_entradas[j][i]); // Número do botão pressionado
+    for (int j = 0; j < NUMERO_PINOS_DIGITAIS; j++) {  // Separador CSV
+      Serial.print(TABELAEVENTOS_botoes[j][i]); // Número do botão pressionado
       Serial.print("\t");  // Inserir tabulação após cada valor
     }
     Serial.println();  // Adicionar uma nova linha após todos os botões
   }
+
+  // Limpa a tabela após imprimir
+  countTabela = 0;  // Reinicia a contagem de eventos
+  for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
+    for (int j = 0; j < TamanhoMaxDaTabela; j++) {
+      TABELAEVENTOS_botoes[i][j] = "-";  // Limpa todos os valores
+    }
+  }
+  Serial.println("Tabela limpa.");
 }
 
-
-void ler_entradas() {
+void lerEntradasDigitais() {
    // Escreve os dados no arquivo se necessário
    if (contagem > 7) {
       imprimirMatriz();
       contagem = 0;
-     // gravarTabelaNoCartao(); 
+    //  gravarTabelaNoCartao(); 
    }
-
    eventoJaRegistrado = false;
-
-    for (int i = 0; i <  numero_entradas; i++) {
-        estadoAtual = digitalRead(botoes[i]);
+    for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
+        estadoAtual = digitalRead(pinosDigitais[i]);
 
         if (estadoAtual == HIGH && estadoAnterior[i] == LOW) {
             if ((tempoAtual - tempoUltimaLeitura[i]) > DEBOUNCE_TIME) {
@@ -143,20 +155,15 @@ void ler_entradas() {
 
                 if (TABELAEVENTOS_tempo[countTabela - 1] == tempoAtual) {
                     eventoJaRegistrado = true;
-                   // TABELAEVENTOS_entradas[i][countTabela - 1] = estadoAtual;
-                   TABELAEVENTOS_entradas[i][countTabela - 1] = i;
-
+                    TABELAEVENTOS_botoes[i][countTabela - 1] = estadoAtual;
                 }
 
                 if (!eventoJaRegistrado && countTabela < TamanhoMaxDaTabela) {
                     tempoUltimaLeitura[i] = tempoAtual;
                     TABELAEVENTOS_tempo[countTabela] = tempoAtual;
-                     TABELAEVENTOS_entradas[i][countTabela - 1] = i;
-
-                   // TABELAEVENTOS_entradas[i][countTabela] = estadoAtual;
+                    TABELAEVENTOS_botoes[i][countTabela] = 1;
                     countTabela++;
                     contagem++;
-  
                 }
             }
         } else {
@@ -170,6 +177,7 @@ void ler_entradas() {
         estadoAnterior[i] = estadoAtual;
     }
 }
+
 
 
 void verificarConteudoDoArquivo() {
@@ -192,13 +200,14 @@ void verificarConteudoDoArquivo() {
 
 void loop() {
   tempoAtual = millis();
-  ler_entradas();
 
-  // Controle do LED com intervalo de blink
-  if ((tempoBLINK + BlinkTimeInterval) < millis()) {
-    tempoBLINK = millis();
-    digitalWrite(botoesOUT[1], bBlinkState);  // Controla o LED no pino 53
-    bBlinkState = !bBlinkState;
+ lerEntradasDigitais();
+  
+ // Verifica se passou 1 segundo desde a última troca de estado do LED
+  if ((tempoAtual - tempoBLINK) >= BlinkTimeInterval) {
+    tempoBLINK = tempoAtual;  // Atualiza o tempo da última troca
+    bBlinkState = !bBlinkState;  // Alterna o estado do LED
+    digitalWrite(2, bBlinkState);  // Liga/desliga o LED
   }
 
   // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
@@ -211,4 +220,4 @@ void loop() {
     }
     estadoAnteriorBotao13 = estadoAtual;
   }
-}
+} 

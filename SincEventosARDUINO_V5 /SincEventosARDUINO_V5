@@ -5,7 +5,9 @@
   #define TamanhoMaxDaTabela 100
   #define DEBOUNCE_TIME 10
   #define BlinkTimeInterval 1000
+  #define intervaloLED_piscar 5000
   #define numero_botoesOUT 2
+  #define NUM_LEDS 1 // Número de LEDs
 
   //LED verde pisca quando entra no loop
   //LED vermelho pisca quando recebe um sinal 
@@ -19,11 +21,23 @@
   const int chipSelect = 38; //pino CS do cartão
 
 
+
+
+
+  //LED
+  const int LED_PINS[NUM_LEDS] = {4}; // Pinos dos LEDs
+  unsigned long tempoUltimaTrocaLED[NUM_LEDS] = {0}; // Tempo da última troca de cada LED
+  bool estadoLED[NUM_LEDS] = {false}; // Estado de cada LED (inicialmente apagado)
+  const unsigned long intervaloLED[NUM_LEDS] = {5000}; // Intervalos diferentes para cada LED (5s, 7s, 10s)
+  const int posicaoTabela [NUM_LEDS] = {3};
+  unsigned long tempoLED = 0;  // Variável para armazenar o tempo do LED aceso
+  bool ledAcendido = false;    // Variável para controlar se o LED está aceso
+
   //TABELAS
   int pinosDigitais[NUMERO_PINOS_DIGITAIS ] = {18, 19, 20, 21};  // Pinos dos botões
   int botoesOUT[numero_botoesOUT] = {2, 3};  // Pinos de saída para LED
   unsigned long tempoUltimaLeitura[NUMERO_PINOS_DIGITAIS ] = {0}; 
-  String TABELAEVENTOS_botoes[NUMERO_PINOS_DIGITAIS][TamanhoMaxDaTabela];
+  String TABELAEVENTOS_botoes[NUMERO_PINOS_DIGITAIS + NUM_LEDS][TamanhoMaxDaTabela];
   unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela];
 
   //VARIÁVEIS 
@@ -31,9 +45,10 @@
   unsigned long ultimaLeitura3 = 0;
   unsigned long tempoAtual = 0;
   unsigned long tempoBLINK = 1000;
+  unsigned long tempoPiscar = 500;
   unsigned long tempoUltimaLeituraTabela = 0;
   long int countTabela = 0;
-  int tempoLED=0;
+  int tempoLEDvermelho=0;
   int contagem = 0;
   bool bBlinkState = false;
   bool estadoAnterior[NUMERO_PINOS_DIGITAIS ] = {LOW, LOW, LOW, LOW};
@@ -147,9 +162,9 @@
   void lerEntradasDigitais() {
     // Escreve os dados no arquivo se necessário
     if (contagem > 7) {
-        //imprimirMatriz();
+        imprimirMatriz();
         contagem = 0;
-        gravarTabelaNoCartao(); 
+        //gravarTabelaNoCartao(); 
     }
     eventoJaRegistrado = false;
       for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
@@ -158,7 +173,7 @@
           if (estadoAtual == HIGH && estadoAnterior[i] == LOW) {
               if ((tempoAtual - tempoUltimaLeitura[i]) > DEBOUNCE_TIME) {
                   digitalWrite(3, HIGH);
-                  tempoLED = 10000;
+                  tempoLEDvermelho = 10000;
 
                   Serial.print("A entrada digital ");
                   Serial.print(i);
@@ -214,10 +229,47 @@
       estadoAnteriorBotao13 = estadoAtual;
     }
   }
+void ledOUTPUT() {
+  for (int i = 0; i < NUM_LEDS; i++) {
+    unsigned long tempoAtual = millis(); // Pega o tempo atual
+
+    // Verifica se o LED deve acender (5000 milissegundos)
+    if (!ledAcendido && (tempoAtual - tempoUltimaTrocaLED[i] >= 5000)) {
+      digitalWrite(LED_PINS[i], HIGH);  // Acende o LED
+      tempoLED = tempoAtual;  // Marca o tempo em que o LED foi aceso
+      ledAcendido = true;     // Marca o LED como aceso
+      tempoUltimaTrocaLED[i] = tempoAtual;  // Atualiza o tempo da última troca
+      
+    // Exibe o evento do LED no Serial Monitor
+    Serial.print("O LED ");
+    Serial.print(LED_PINS[i]);
+    Serial.print(" piscou no tempo: ");
+    Serial.println(tempoAtual);
+
+    // Registra o evento na tabela quando o LED muda de estado
+    if (countTabela < TamanhoMaxDaTabela) {
+      TABELAEVENTOS_tempo[countTabela] = tempoAtual;  // Registra o tempo
+        TABELAEVENTOS_botoes[posicaoTabela[i]][countTabela] = i;  // Registra como HIGH
+
+
+      countTabela++;
+      contagem++;
+    }
+    } else  if (ledAcendido && (tempoAtual - tempoLED >= 5)) {
+      digitalWrite(LED_PINS[i], LOW);  // Apaga o LED
+      ledAcendido = false;  // Marca o LED como apagado
+      tempoUltimaTrocaLED[i] = tempoAtual;  // Atualiza o tempo da última troca
+    }
+
+
+  }
+}
+
+
 
   void loop() {
     tempoAtual = millis();
-
+    ledOUTPUT();
     lerEntradasDigitais();
     ledVERDE();
     imprimirCartaoSD();

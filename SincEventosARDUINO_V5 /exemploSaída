@@ -41,3 +41,27 @@ Imprimindo tabela:
 130843	1	1	-	-	
 134824	-	-	-	1	
 
+//COM LED 
+Cartao SD conectado
+Arquivo aberto para gravação.
+A entrada digital 2 foi pressionada: 18
+A entrada digital 1 foi pressionada: 1810
+A entrada digital 0 foi pressionada: 1810
+O LED 4 piscou no tempo: 5000
+A entrada digital 2 foi pressionada: 5791
+A entrada digital 0 foi pressionada: 7782
+A entrada digital 1 foi pressionada: 7782
+O LED 4 piscou no tempo: 10000
+A entrada digital 2 foi pressionada: 11763
+A entrada digital 0 foi pressionada: 13754
+A entrada digital 1 foi pressionada: 13754
+Imprimindo tabela:
+18	-	-	1	-	
+1810	1	1	-	-	
+5000	-	-	-	0	
+5791	-	-	1	-	
+7782	1	1	-	-	
+10000	-	-	-	0	
+11763	-	-	1	-	
+13754	1	1	-	-	
+

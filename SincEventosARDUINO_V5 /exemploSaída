@@ -65,3 +65,46 @@ Imprimindo tabela:
 11763	-	-	1	-	
 13754	1	1	-	-	
 
+
+A entrada digital 2 foi pressionada: 2868
+A entrada digital 0 foi pressionada: 4858
+A entrada digital 1 foi pressionada: 4858
+O LED 4 piscou no tempo: 5000
+O LED 4 piscou no tempo: 10000
+A entrada digital 0 foi pressionada: 10830
+A entrada digital 1 foi pressionada: 10830
+O LED 4 piscou no tempo: 15000
+A entrada digital 1 foi pressionada: 16802
+A entrada digital 0 foi pressionada: 16802
+O LED 4 piscou no tempo: 20000
+Imprimindo tabela:
+2868	-	-	1	-	
+4858	1	1	-	-	
+5000	-	-	-	0	
+10000	-	-	-	0	
+10830	1	1	-	-	
+15000	-	-	-	0	
+16802	1	1	-	-	
+20000	-	-	-	0	
+Tabela limpa.
+A entrada digital 2 foi pressionada: 20784
+A entrada digital 0 foi pressionada: 22774
+A entrada digital 1 foi pressionada: 22774
+O LED 4 piscou no tempo: 25132
+A entrada digital 2 foi pressionada: 26756
+A entrada digital 0 foi pressionada: 28746
+A entrada digital 1 foi pressionada: 28746
+O LED 4 piscou no tempo: 30132
+A entrada digital 2 foi pressionada: 32728
+A entrada digital 0 foi pressionada: 34718
+A entrada digital 1 foi pressionada: 34718
+Imprimindo tabela:
+20784	-	-	1	-	
+22774	1	1	-	-	
+25132	-	-	-	0	
+26756	-	-	1	-	
+28746	1	1	-	-	
+30132	-	-	-	0	
+32728	-	-	1	-	
+34718	1	1	-	-	
+

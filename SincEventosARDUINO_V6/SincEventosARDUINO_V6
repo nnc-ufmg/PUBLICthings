@@ -5,7 +5,6 @@
   #define TamanhoMaxDaTabela 100
   #define DEBOUNCE_TIME 70
   #define BlinkTimeInterval 1000
-  #define intervaloLED_piscar 5000
   #define numero_botoesOUT 2
   #define NUM_LEDS 1 // Número de LEDs
 
@@ -51,8 +50,6 @@ Entradas entradas[] = {
   unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela];
 
   //VARIÁVEIS 
-  const unsigned long intervalo3 = 7000; // 7 segundos
-  unsigned long ultimaLeitura3 = 0;
   unsigned long tempoAtual = 0;
   unsigned long tempoBLINK = 1000;
   unsigned long tempoPiscar = 1000;
@@ -61,7 +58,6 @@ Entradas entradas[] = {
   int tempoLEDvermelho=0;
   int contagem = 0;
   bool bBlinkState = false;
-  bool estadoAnterior[NUMERO_PINOS_DIGITAIS ] = {LOW, LOW, LOW, LOW};
   bool estadoAnteriorBotao13 = LOW;
   bool estadoAtual;
   bool eventoJaRegistrado = false;
@@ -191,12 +187,7 @@ Entradas entradas[] = {
   }
 
   void lerEntradasDigitais() {
-    // Escreve os dados no arquivo se necessário
-    if (contagem > 7) {
-        imprimirMatriz();
-        contagem = 0;
-        //gravarTabelaNoCartao(); 
-    }
+
     eventoJaRegistrado = false;
       for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
           estadoAtual = digitalRead(entradas[i].pin);
@@ -279,8 +270,14 @@ void ledOUTPUT() {
 
   void loop() {
 
-     for (int i = 0; i < sizeof(entradas) / sizeof(Entradas); i++) {
+    for (int i = 0; i < sizeof(entradas) / sizeof(Entradas); i++) {
         entradas[i].readFunc(); // Chama a função de leitura associada ao pino
+    }
+
+    if (contagem > 7) {
+      imprimirMatriz();
+      contagem = 0;
+      //gravarTabelaNoCartao(); 
     }
 
     tempoAtual = millis();

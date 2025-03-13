@@ -1,21 +1,21 @@
-  #include <SPI.h>
-  #include <SD.h>
+#include <SPI.h>
+#include <SD.h>
 
-  #define NUMERO_PINOS_DIGITAIS 4 
-  #define TamanhoMaxDaTabela 100
-  #define DEBOUNCE_TIME 70
-  #define BlinkTimeInterval 1000
-  #define numero_botoesOUT 2
-  #define NUM_LEDS 1 // Número de LEDs
+#define NUMERO_PINOS_DIGITAIS 4 
+#define TamanhoMaxDaTabela 100
+#define DEBOUNCE_TIME 70
+#define BlinkTimeInterval 1000
+#define numero_botoesOUT 2
+#define NUM_LEDS 1 // Número de LEDs
 
-  //LED verde pisca quando entra no loop
-  //LED vermelho pisca quando recebe um sinal 
-  //pino 2 do UNO envia para o pino 19 do MEGA
-  //pino 3 do UNO envia para o pino 18 do MEGA
-  //pino 4 do UNO envia para o pino 21 do MEGA 
-  //pino 5 do UNO envia para o pino 20 do MEGA 
+//LED verde pisca quando entra no loop
+//LED vermelho pisca quando recebe um sinal 
+//pino 2 do UNO envia para o pino 19 do MEGA
+//pino 3 do UNO envia para o pino 18 do MEGA
+//pino 4 do UNO envia para o pino 21 do MEGA 
+//pino 5 do UNO envia para o pino 20 do MEGA 
 
-  const int chipSelect = 38; //pino CS do cartão
+const int chipSelect = 38; //pino CS do cartão
 
   
 struct Entradas {
@@ -40,115 +40,115 @@ Entradas entradas[] = {
 };
 
 
-  //LED
-  unsigned long tempoLED = 0;  // Variável para armazenar o tempo do LED aceso
-  bool ledAcendido = false;    // Variável para controlar se o LED está aceso
+//LED
+unsigned long tempoLED = 0;  // Variável para armazenar o tempo do LED aceso
+bool ledAcendido = false;    // Variável para controlar se o LED está aceso
 
-  //TABELAS
-  int botoesOUT[numero_botoesOUT] = {2, 3};  // Pinos para os LEDS vermelho e verde
-  String TABELAEVENTOS_botoes[NUMERO_PINOS_DIGITAIS + NUM_LEDS][TamanhoMaxDaTabela]; //tabela que armazena as informações
-  unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela]; // tabela que armazena os tempos em que os eventos aconteceram
+//TABELAS
+int botoesOUT[numero_botoesOUT] = {2, 3};  // Pinos para os LEDS vermelho e verde
+String TABELAEVENTOS_botoes[NUMERO_PINOS_DIGITAIS + NUM_LEDS][TamanhoMaxDaTabela]; //tabela que armazena as informações
+unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela]; // tabela que armazena os tempos em que os eventos aconteceram
 
-  //VARIÁVEIS 
-  unsigned long tempoAtual = 0;
-  unsigned long tempoBLINK = 1000;
-  unsigned long tempoPiscar = 1000;
-  unsigned long tempoUltimaLeituraTabela = 0;
-  long int countTabela = 0;
-  int tempoLEDvermelho=0;
-  int contagem = 0;
-  bool bBlinkState = false;
-  bool estadoAnteriorBotao13 = LOW;
-  bool estadoAtual;
-  bool eventoJaRegistrado = false;
-  File dataFile;
+//VARIÁVEIS 
+unsigned long tempoAtual = 0;
+unsigned long tempoBLINK = 1000;
+unsigned long tempoUltimaLeituraTabela = 0; //marca o ultimo tempo no qual o botão 46 foi apertado
+long int countTabela = 0; // passa pelas colunas da tabela
+int tempoLEDvermelho=0;
+long int contagem = 0; //contagem para programar o momento em que grava no cartão ou a tabela é impressa
+bool bBlinkState = false; //do LED verde
+bool estadoAnteriorBotao13 = LOW;
+bool estadoAtual;
+bool eventoJaRegistrado = false; //para ver se tem horarios repetidos na tabela 
+File dataFile;
 
-  void setup() {
-    Serial.begin(9600);
+void setup() {
+  Serial.begin(9600);
 
-    // Inicializa a tabela com "-"
-    for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
-      for (int j = 0; j < TamanhoMaxDaTabela; j++) {
-        TABELAEVENTOS_botoes[i][j] = "-";
-      }
+  // Inicializa a tabela com "-"
+  for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
+    for (int j = 0; j < TamanhoMaxDaTabela; j++) {
+      TABELAEVENTOS_botoes[i][j] = "-";
     }
+  }
 
-    // Inicializa o cartão SD
-    if (!SD.begin(chipSelect)) {
-      Serial.println("Falha ao conectar com o cartao SD");
-      return;
-    }
-    Serial.println("Cartao SD conectado");
+  // Inicializa o cartão SD
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Falha ao conectar com o cartao SD");
+    return;
+  }
+  
+  Serial.println("Cartao SD conectado");
 
-    // Configura os pinos de saída para LED
-    for (int i = 0; i < numero_botoesOUT; i++) {
-      pinMode(botoesOUT[i], OUTPUT);
-    }
+  // Configura os pinos de saída para LED
+  for (int i = 0; i < numero_botoesOUT; i++) {
+    pinMode(botoesOUT[i], OUTPUT);
+  }
 
-    // Configura os pinos dos botões como entradas
-    for (int i = 0; i < NUMERO_PINOS_DIGITAIS ; i++) {
-      pinMode( entradas[i].pin, INPUT);
-    }
+  // Configura os pinos dos botões como entradas
+  for (int i = 0; i < NUMERO_PINOS_DIGITAIS ; i++) {
+    pinMode( entradas[i].pin, INPUT);
+  }
 
 
-    pinMode(46, INPUT);  // Botão para impressão 
+  pinMode(46, INPUT);  // Botão para impressão 
     
-    // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
-    dataFile = SD.open("datalog.csv", FILE_WRITE);
-    if (dataFile) {
-      Serial.println("Arquivo aberto para gravação.");
-    } else {
-      Serial.println("Falha ao abrir o arquivo.");
-    }
-
+  // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
+  dataFile = SD.open("datalog.csv", FILE_WRITE);
+  if (dataFile) {
+    Serial.println("Arquivo aberto para gravação.");
+  } else {
+    Serial.println("Falha ao abrir o arquivo.");
   }
 
-  void ledVERDE(){
-    if ((tempoAtual - tempoBLINK) >= BlinkTimeInterval) {
-      tempoBLINK = tempoAtual;  // Atualiza o tempo da última troca
-      bBlinkState = !bBlinkState;  // Alterna o estado do LED
-      digitalWrite(2, bBlinkState);  // Liga/desliga o LED
-    }
+}
+
+void ledVERDE(){
+  if ((tempoAtual - tempoBLINK) >= BlinkTimeInterval) {
+    tempoBLINK = tempoAtual;  // Atualiza o tempo da última troca
+    bBlinkState = !bBlinkState;  // Alterna o estado do LED
+    digitalWrite(2, bBlinkState);  // Liga/desliga o LED
   }
+}
 
-  void gravarTabelaNoCartao() {
-    if (dataFile) {
-      Serial.println("Gravando dados no cartão SD...");
+void gravarTabelaNoCartao() {
+  if (dataFile) {
+    Serial.println("Gravando dados no cartão SD...");
 
-      for (int i = 0; i < countTabela; i++) {
-        dataFile.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
-        dataFile.print(",");   
-        for(int j = 0; j < NUMERO_PINOS_DIGITAIS; j++) { // Separador CSV
-          dataFile.print(TABELAEVENTOS_botoes[j][i]);
-          if (j < NUMERO_PINOS_DIGITAIS - 1) {
-            dataFile.print(","); // Adiciona vírgula apenas entre os valores
-          }
-        }
-        dataFile.println(); 
-      }
-      
-      dataFile.flush();  // Garante que os dados sejam gravados imediatamente
-      Serial.println("Dados gravados e tabela limpa.");
-
-      // Limpa a tabela
-      countTabela = 0;
-    } else {
-      Serial.println("Erro ao gravar no cartão SD.");
-    }
-  }
-
-  void imprimirMatriz() {
-    Serial.println("Imprimindo tabela:");
-    
     for (int i = 0; i < countTabela; i++) {
-      Serial.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
-      Serial.print("\t");   
-      for (int j = 0; j < NUMERO_PINOS_DIGITAIS; j++) {  // Separador CSV
-        Serial.print(TABELAEVENTOS_botoes[j][i]); // Número do botão pressionado
-        Serial.print("\t");  // Inserir tabulação após cada valor
+      dataFile.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
+      dataFile.print(",");   
+      for(int j = 0; j < NUMERO_PINOS_DIGITAIS; j++) { 
+        dataFile.print(TABELAEVENTOS_botoes[j][i]);
+        if (j < NUMERO_PINOS_DIGITAIS - 1) {
+          dataFile.print(","); // Adiciona vírgula apenas entre os valores
+        }
       }
-      Serial.println();  // Adicionar uma nova linha após todos os botões
+      dataFile.println(); 
     }
+      
+    dataFile.flush();  // Garante que os dados sejam gravados imediatamente
+    Serial.println("Dados gravados e tabela limpa.");
+
+    // Limpa a tabela
+    countTabela = 0;
+  } else {
+    Serial.println("Erro ao gravar no cartão SD.");
+  }
+}
+
+void imprimirMatriz() {
+  Serial.println("Imprimindo tabela:");
+    
+  for (int i = 0; i < countTabela; i++) {
+    Serial.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
+    Serial.print("\t");   
+    for (int j = 0; j < NUMERO_PINOS_DIGITAIS; j++) { 
+    Serial.print(TABELAEVENTOS_botoes[j][i]); // imprime a entrada
+    Serial.print("\t");  // Inserir tabulação após cada valor
+    }
+    Serial.println();  // Adicionar uma nova linha após todos os botões
+  }
 
     /*
     countTabela = 0;  // Reinicia a contagem de eventos
@@ -159,75 +159,72 @@ Entradas entradas[] = {
     }
     Serial.println("Tabela limpa.");*/
     
-  }
+}
 
 
-  void imprimirCartaoSD() {
-    // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
-    if ((tempoAtual - tempoUltimaLeituraTabela) > DEBOUNCE_TIME) {
-      estadoAtual = digitalRead(46);
-      if (estadoAtual == HIGH && estadoAnteriorBotao13 == LOW) {
-        Serial.println("Verificando conteúdo do arquivo");
+void imprimirCartaoSD() {
+  // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
+  if ((tempoAtual - tempoUltimaLeituraTabela) > DEBOUNCE_TIME) {
+    estadoAtual = digitalRead(46);
+    if (estadoAtual == HIGH && estadoAnteriorBotao13 == LOW) {
+      Serial.println("Verificando conteúdo do arquivo");
 
-        if (dataFile) {  // Verifica se o arquivo foi aberto corretamente
-          // Posiciona o ponteiro de leitura no início do arquivo
-          dataFile.seek(0);
-
-          Serial.println("Conteúdo do arquivo:");
-          while (dataFile.available()) {
-            Serial.write(dataFile.read());  // Lê e imprime o conteúdo
-          }
-        } else {
+      if (dataFile) {  // Verifica se o arquivo foi aberto corretamente
+      dataFile.seek(0);
+      Serial.println("Conteúdo do arquivo:");
+        while (dataFile.available()) {
+          Serial.write(dataFile.read());  // Lê e imprime o conteúdo
+        }
+      } else {
           Serial.println("Falha ao abrir o arquivo para leitura.");
         }
-
-        tempoUltimaLeituraTabela = tempoAtual;
+      tempoUltimaLeituraTabela = tempoAtual;
       }
-      estadoAnteriorBotao13 = estadoAtual;
-    }
+    estadoAnteriorBotao13 = estadoAtual;
   }
+}
 
-  void lerEntradasDigitais() {
+void lerEntradasDigitais() {
 
-    eventoJaRegistrado = false;
-      for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
-          estadoAtual = digitalRead(entradas[i].pin);
+  eventoJaRegistrado = false;
+    for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
+      estadoAtual = digitalRead(entradas[i].pin);
 
-          if (estadoAtual == HIGH && entradas[i].estadoAnterior == LOW) {
-              if ((tempoAtual - entradas[i].tempoUltimaLeitura) > DEBOUNCE_TIME) {
-                  digitalWrite(3, HIGH);
-                  tempoLEDvermelho = 10000;
+      if (estadoAtual == HIGH && entradas[i].estadoAnterior == LOW) {
+        if ((tempoAtual - entradas[i].tempoUltimaLeitura) > DEBOUNCE_TIME) {
+          digitalWrite(3, HIGH);
+          tempoLEDvermelho = 10000;
 
-                  Serial.print("A entrada digital ");
-                  Serial.print(i);
-                  Serial.print(" foi pressionada: ");
-                  Serial.println(tempoAtual);
+          Serial.print("A entrada digital ");
+          Serial.print(i);
+          Serial.print(" foi pressionada: ");
+          Serial.println(tempoAtual);
 
-                  if (TABELAEVENTOS_tempo[countTabela - 1] == tempoAtual) {
-                      eventoJaRegistrado = true;
-                      TABELAEVENTOS_botoes[i][countTabela - 1] = entradas[i].qualEntrada;
-                  }
+      if (TABELAEVENTOS_tempo[countTabela - 1] == tempoAtual) {
+        eventoJaRegistrado = true;
+        TABELAEVENTOS_botoes[i][countTabela - 1] = entradas[i].qualEntrada;
+      }
 
-                  if (!eventoJaRegistrado && countTabela < TamanhoMaxDaTabela) {
-                      entradas[i].tempoUltimaLeitura = tempoAtual;
-                      TABELAEVENTOS_tempo[countTabela] = tempoAtual;
-                      TABELAEVENTOS_botoes[i][countTabela] = entradas[i].qualEntrada;
-                      countTabela++;
-                      contagem++;
-                  }
-              }
-          } else {
-              if (tempoLED > 0) {
-                  digitalWrite(3, HIGH);
-                  tempoLED--;
-              } else {
-                  digitalWrite(3, LOW);
-              }
+      if (!eventoJaRegistrado && countTabela < TamanhoMaxDaTabela) {
+        entradas[i].tempoUltimaLeitura = tempoAtual;
+        TABELAEVENTOS_tempo[countTabela] = tempoAtual;
+        TABELAEVENTOS_botoes[i][countTabela] = entradas[i].qualEntrada;
+        countTabela++;
+        contagem++;
+        }
+      }
+    } else {
+      if (tempoLED > 0) {
+        digitalWrite(3, HIGH);
+        tempoLED--;
+        } else {
+          digitalWrite(3, LOW);
           }
-          entradas[i].estadoAnterior = estadoAtual;
-      }
-  }
+    }
+  entradas[i].estadoAnterior = estadoAtual;
 
+    }
+}
 
 void ledOUTPUT() {
   for (int i = 0; i < NUM_LEDS; i++) {
@@ -241,35 +238,28 @@ void ledOUTPUT() {
       ledAcendido = true;     // Marca o LED como aceso
       entradas[j].tempoUltimaTrocaLED = tempoAtual;  // Atualiza o tempo da última troca
       
-    // Exibe o evento do LED no Serial Monitor
-    Serial.print("O LED ");
-    Serial.print(entradas[j].pin);
-    Serial.print(" piscou no tempo: ");
-    Serial.println(tempoAtual);
+      // Exibe o evento do LED no Serial Monitor
+      Serial.print("O LED ");
+      Serial.print(entradas[j].pin);
+      Serial.print(" piscou no tempo: ");
+      Serial.println(tempoAtual);
 
-    // Registra o evento na tabela quando o LED muda de estado
-    if (countTabela < TamanhoMaxDaTabela) {
-      TABELAEVENTOS_tempo[countTabela] = tempoAtual;  // Registra o tempo
+      // Registra o evento na tabela quando o LED muda de estado
+      if (countTabela < TamanhoMaxDaTabela) {
+        TABELAEVENTOS_tempo[countTabela] = tempoAtual;  // Registra o tempo
         TABELAEVENTOS_botoes[j-1][countTabela] = entradas[j].qualEntrada; 
-
-
-      countTabela++;
-      contagem++;
-    }
+        countTabela++;
+        contagem++;
+      }
     } else  if (ledAcendido && (tempoAtual - tempoLED >= 1000)) {
       digitalWrite(entradas[j].pin, LOW);  // Apaga o LED
       ledAcendido = false;  // Marca o LED como apagado
-     entradas[j].tempoUltimaTrocaLED = tempoAtual;  // Atualiza o tempo da última troca
+      entradas[j].tempoUltimaTrocaLED = tempoAtual;  // Atualiza o tempo da última troca
     }
-
-
   }
 }
 
-
-
-
-  void loop() {
+void loop() {
 
     for (int i = 0; i < sizeof(entradas) / sizeof(Entradas); i++) {
         entradas[i].readFunc(); // Chama a função de leitura associada ao pino
@@ -285,4 +275,4 @@ void ledOUTPUT() {
     ledVERDE();
     imprimirCartaoSD();
 
-  } 
+} 

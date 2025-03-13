@@ -17,3 +17,21 @@ Imprimindo tabela:
 10017	-	-	-	E	
 12589	-	-	C	-	
 14579	A	B	-	-	
+A entrada digital 2 foi pressionada: 4815
+O LED 4 piscou no tempo: 5000
+A entrada digital 0 foi pressionada: 6806
+A entrada digital 1 foi pressionada: 6806
+O LED 4 piscou no tempo: 10017
+A entrada digital 2 foi pressionada: 10787
+A entrada digital 0 foi pressionada: 12778
+A entrada digital 1 foi pressionada: 12778
+O LED 4 piscou no tempo: 15035
+Imprimindo tabela:
+834	A	B	-	-	
+4815	-	-	C	-	
+5000	-	-	-	E	
+6806	A	B	-	-	
+10017	-	-	-	E	
+10787	-	-	C	-	
+12778	A	B	-	-	
+15035	-	-	-	E	

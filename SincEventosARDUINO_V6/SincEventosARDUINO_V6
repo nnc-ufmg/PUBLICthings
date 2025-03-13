@@ -150,14 +150,15 @@ Entradas entradas[] = {
       Serial.println();  // Adicionar uma nova linha após todos os botões
     }
 
-    // Limpa a tabela após imprimir
+    /*
     countTabela = 0;  // Reinicia a contagem de eventos
     for (int i = 0; i < NUMERO_PINOS_DIGITAIS; i++) {
       for (int j = 0; j < TamanhoMaxDaTabela; j++) {
         TABELAEVENTOS_botoes[i][j] = "-";  // Limpa todos os valores
       }
     }
-    Serial.println("Tabela limpa.");
+    Serial.println("Tabela limpa.");*/
+    
   }
 
 

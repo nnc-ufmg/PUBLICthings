@@ -1,0 +1,36 @@
+const int pino1 = 2;
+const int pino2 = 3;
+const int pino3 = 4;
+const int pino4 = 5;
+
+
+unsigned long tempoAnterior4 = 0;
+const int duracaoHigh = 2000; // 2 segundos
+
+void setup() {
+  pinMode(pino1, OUTPUT);
+  pinMode(pino2, OUTPUT);
+  pinMode(pino3, OUTPUT);
+  pinMode(pino4, OUTPUT);
+}
+
+void enviarSinalPino3(){
+  digitalWrite(pino3, HIGH);
+  delay(duracaoHigh);
+  digitalWrite(pino3, LOW);
+}
+void enviarSinalPinos1e2() {
+    digitalWrite(pino1, HIGH);
+    digitalWrite(pino2, HIGH);
+    delay(duracaoHigh); // Mantém HIGH por 2 segundos
+    digitalWrite(pino1, LOW);
+    digitalWrite(pino2, LOW);
+}
+
+
+
+void loop() {
+  enviarSinalPinos1e2();
+    delay(2000); 
+  enviarSinalPino3();
+}

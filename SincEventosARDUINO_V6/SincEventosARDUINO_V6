@@ -36,7 +36,7 @@ Entradas entradas[] = {
     {19, "B",  0, 0, 0, LOW, lerEntradasDigitais},
     {20, "C", 0, 0, 0, LOW, lerEntradasDigitais},         
     {21, "D", 0, 0, 0, LOW, lerEntradasDigitais},   
-    {4, "E", 0, 5000, 0, LOW, ledOUTPUT},  // Aqui, 4 é um LED, então definimos como saída (true)
+    {4, "E", 0, 5000, 0, LOW, ledOUTPUT},  
 };
 
 
@@ -45,9 +45,9 @@ Entradas entradas[] = {
   bool ledAcendido = false;    // Variável para controlar se o LED está aceso
 
   //TABELAS
-  int botoesOUT[numero_botoesOUT] = {2, 3};  // Pinos de saída para LED
-  String TABELAEVENTOS_botoes[NUMERO_PINOS_DIGITAIS + NUM_LEDS][TamanhoMaxDaTabela];
-  unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela];
+  int botoesOUT[numero_botoesOUT] = {2, 3};  // Pinos para os LEDS vermelho e verde
+  String TABELAEVENTOS_botoes[NUMERO_PINOS_DIGITAIS + NUM_LEDS][TamanhoMaxDaTabela]; //tabela que armazena as informações
+  unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela]; // tabela que armazena os tempos em que os eventos aconteceram
 
   //VARIÁVEIS 
   unsigned long tempoAtual = 0;

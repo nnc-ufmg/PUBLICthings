@@ -1,3 +1,47 @@
+EXEMPLO1- 
+A entrada digital 2 foi pressionada: 489
+A entrada digital 0 foi pressionada: 2481
+A entrada digital 1 foi pressionada: 2481
+O LED 4 piscou no tempo: 5000
+A entrada digital 2 foi pressionada: 6462
+A entrada digital 1 foi pressionada: 8453
+A entrada digital 0 foi pressionada: 8453
+O LED 4 piscou no tempo: 10017
+A entrada digital 2 foi pressionada: 12434
+A entrada digital 0 foi pressionada: 14425
+A entrada digital 1 foi pressionada: 14425
+O LED 4 piscou no tempo: 15036
+A entrada digital 2 foi pressionada: 18406
+O LED 4 piscou no tempo: 20054
+A entrada digital 0 foi pressionada: 20397
+A entrada digital 1 foi pressionada: 20397
+A entrada digital 2 foi pressionada: 24378
+O LED 4 piscou no tempo: 25071
+A entrada digital 0 foi pressionada: 26369
+A entrada digital 1 foi pressionada: 26369
+O LED 4 piscou no tempo: 30089
+
+Imprimindo tabela:
+489	-	-	C	-	
+2481	A	B	-	-	
+5000	-	-	-	E	
+6462	-	-	C	-	
+8453	A	B	-	-	
+10017	-	-	-	E	
+12434	-	-	C	-	
+14425	A	B	-	-	
+15036	-	-	-	E	
+18406	-	-	C	-	
+20054	-	-	-	E	
+20397	A	B	-	-	
+24378	-	-	C	-	
+25071	-	-	-	E	
+26369	A	B	-	-	
+30089	-	-	-	E
+
+
+
+EXEMPLO 2- 
 A entrada digital 0 foi pressionada: 2635
 A entrada digital 1 foi pressionada: 2635
 O LED 4 piscou no tempo: 5000
@@ -17,6 +61,8 @@ Imprimindo tabela:
 10017	-	-	-	E	
 12589	-	-	C	-	
 14579	A	B	-	-	
+
+EXEMPLO3-
 A entrada digital 2 foi pressionada: 4815
 O LED 4 piscou no tempo: 5000
 A entrada digital 0 foi pressionada: 6806

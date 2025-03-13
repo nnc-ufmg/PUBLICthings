@@ -1,0 +1,19 @@
+A entrada digital 0 foi pressionada: 2635
+A entrada digital 1 foi pressionada: 2635
+O LED 4 piscou no tempo: 5000
+A entrada digital 2 foi pressionada: 6617
+A entrada digital 0 foi pressionada: 8607
+A entrada digital 1 foi pressionada: 8607
+O LED 4 piscou no tempo: 10017
+A entrada digital 2 foi pressionada: 12589
+A entrada digital 0 foi pressionada: 14579
+A entrada digital 1 foi pressionada: 14579
+Imprimindo tabela:
+645	-	-	C	-	
+2635	A	B	-	-	
+5000	-	-	-	E	
+6617	-	-	C	-	
+8607	A	B	-	-	
+10017	-	-	-	E	
+12589	-	-	C	-	
+14579	A	B	-	-	

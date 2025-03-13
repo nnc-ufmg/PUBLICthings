@@ -13,8 +13,8 @@
   //LED vermelho pisca quando recebe um sinal 
   //pino 2 do UNO envia para o pino 19 do MEGA
   //pino 3 do UNO envia para o pino 18 do MEGA
-  //pino 4 do UNO envia para o pino 21 do MEGA (PULSO DO POTENCIOMETRO)
-  //pino 5 do UNO envia para o pino 20 do MEGA (PULSO DA ONDA QUADRADA)
+  //pino 4 do UNO envia para o pino 21 do MEGA 
+  //pino 5 do UNO envia para o pino 20 do MEGA 
 
 
   const int entradaAnalogica3 = A2; // Pino do potenciômetro

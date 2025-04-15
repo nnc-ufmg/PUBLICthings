@@ -1,0 +1,211 @@
+#include <SPI.h>
+#include <SD.h>
+
+#define DEBOUNCE_TIME 70
+#define BlinkTimeInterval 500  // Intervalo de 500 milissegundos para piscar o LED
+#define pinLEDVERDE 2  // Defina o pino onde o LED verde está conectado
+#define pinLEDVERMELHO 3  // Defina o pino onde o LED vermelho está conectado
+#define TamanhoMaxDaTabela 200
+unsigned long timestamp2 = 0;
+
+
+// Fora do loop:
+bool ledInicialLigado = false;
+unsigned long tempoInicioLED = 0;
+
+
+//CARTÃO SD
+const int chipSelect = 38; //pino CS do cartão
+File dataFile;
+
+//TABELAS
+unsigned long TABELAEVENTOS_tempo[TamanhoMaxDaTabela]; // tabela que armazena os tempos em que os eventos aconteceram
+String TABELAEVENTOS_pinos[TamanhoMaxDaTabela];
+unsigned long contadorTabela = 0;
+
+//LED VERDE
+unsigned long tempoPiscar = 0; // Armazena o tempo em que o LED verde deve apagar
+
+//LED VERMELHO 
+unsigned long tempoUltimoRed = 0; // Armazena o último tempo em que o LED vermelho foi acionado
+unsigned long tempoUltimoBlink = 0;  // Armazena o último tempo em que o LED verde piscou
+
+//TEMPO
+volatile unsigned long tempo_atual = 0; // Contador de tempo em microssegundos
+
+//FUNÇÕES RECEBER SINAL
+bool blinkando = false;  // Controle para saber se o LED verde deve piscar
+bool evento18 = false;
+bool evento19 = false;
+
+//BOTÃO
+bool estadoAnteriorBotao13 = LOW;
+bool estadoAtual;
+unsigned long tempoUltimaLeituraTabela = 0; //marca o ultimo tempo no qual o botão 46 foi apertado
+
+void setup() {
+  Serial.begin(9600);
+
+  // Inicializa o cartão SD
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Falha ao conectar com o cartao SD");
+    return;
+  }else{
+    //Serial.println("Cartao SD conectado");
+  }
+  
+  //configura os LEDS como saídas
+  pinMode(2, OUTPUT);  
+  pinMode(3, OUTPUT);  
+
+  pinMode(7, OUTPUT);  
+  
+  noInterrupts(); // Desativa interrupções durante configuração
+  
+  // Configura Timer1 para contar com prescaler de 8 (1 tick = 0.5 microssegundos)
+  TCCR1A = 0; // Modo normal
+  TCCR1B = 0; // Reset no Timer1
+  TCCR1B |= (1 << CS11); // Prescaler de 8 -> Clock do Timer1 = 2 MHz (1 tick = 0.5 µs)
+  TIMSK1 |= (1 << TOIE1); // Habilita interrupção de overflow no Timer1
+  
+  interrupts(); // Ativa interrupções globais
+  
+  pinMode(18, INPUT_PULLUP); // Pino de entrada para detecção do evento
+  attachInterrupt(digitalPinToInterrupt(18), eventoRecebido18, RISING); // Detecta borda de subida no pino 18
+  pinMode(19, INPUT_PULLUP); // Pino de entrada para detecção do evento
+  attachInterrupt(digitalPinToInterrupt(19), eventoRecebido19, RISING); // Detecta borda de subida no pino 18
+  pinMode(20, INPUT_PULLUP); // Pino de entrada para detecção do evento
+  attachInterrupt(digitalPinToInterrupt(20), eventoRecebido20, RISING); // Detecta borda de subida no pino 18
+
+   // Abre o arquivo para gravação (modo append, para não sobrescrever os dados)
+  dataFile = SD.open("datalog.csv", FILE_WRITE);
+  if (dataFile) {
+    Serial.println("Arquivo aberto para gravação.");
+  } else {
+    Serial.println("Falha ao abrir o arquivo.");
+  }
+
+
+ digitalWrite(7, HIGH);
+ delay(100);
+ digitalWrite(7, LOW);
+
+}
+
+ISR(TIMER1_OVF_vect) {
+  tempo_atual += 65536; // O Timer1 conta até 65536 antes de dar overflow
+}
+
+
+
+void eventoRecebido18() {
+  unsigned long timestamp = (tempo_atual + TCNT1) / 2;  // Captura o tempo exato do evento, levando em conta o Timer1 e o contador do Timer
+ //  Serial.print("Evento detectado em: ");
+  TABELAEVENTOS_tempo[contadorTabela] = timestamp; // tabela que armazena os tempos em que os eventos aconteceram
+  TABELAEVENTOS_pinos[contadorTabela] = "19";
+  digitalWrite(pinLEDVERDE, HIGH);  // Liga o LED verde
+  contadorTabela++;
+  tempoPiscar = tempo_atual + 500000; // Define o tempo em que o LED verde deve apagar (500ms após o sinal)
+  blinkando = true;  // Indica que o LED verde deve piscar
+}
+
+void eventoRecebido19() {
+  unsigned long timestamp = (tempo_atual + TCNT1) / 2;  // Captura o tempo exato do evento, levando em conta o Timer1 e o contador do Timer
+ //  Serial.print("Evento detectado em: ");
+  TABELAEVENTOS_tempo[contadorTabela] = timestamp; // tabela que armazena os tempos em que os eventos aconteceram
+  TABELAEVENTOS_pinos[contadorTabela] = "18";
+  contadorTabela++;
+  tempoPiscar = tempo_atual + 500000; // Define o tempo em que o LED verde deve apagar (500ms após o sinal)
+  blinkando = true;  // Indica que o LED verde deve piscar
+}
+
+void eventoRecebido20() {
+  unsigned long timestamp = (tempo_atual + TCNT1) / 2;  // Captura o tempo exato do evento, levando em conta o Timer1 e o contador do Timer
+  //Serial.print("Evento detectado em: ");
+  TABELAEVENTOS_tempo[contadorTabela] = timestamp; // tabela que armazena os tempos em que os eventos aconteceram
+  TABELAEVENTOS_pinos[contadorTabela] = "20";
+  contadorTabela++;
+  tempoPiscar = tempo_atual + 500000; // Define o tempo em que o LED verde deve apagar (500ms após o sinal)
+  blinkando = true;  // Indica que o LED verde deve piscar
+}
+
+
+
+void gravarTabelaNoCartao() {
+  if (dataFile) {
+    Serial.println("Gravando dados no cartão SD...");
+
+    for (int i = 0; i < contadorTabela; i++) {
+      dataFile.print(TABELAEVENTOS_tempo[i]);  // Tempo do evento
+      dataFile.print(",");   
+        dataFile.print(TABELAEVENTOS_pinos[i]);
+      dataFile.println(); 
+    }
+      
+    dataFile.flush();  // Garante que os dados sejam gravados imediatamente
+    Serial.println("Dados gravados e tabela limpa.");
+
+    // Limpa a tabela
+    contadorTabela = 0;
+  } else {
+    Serial.println("Erro ao gravar no cartão SD.");
+  }
+}
+
+void imprimirCartaoSD() {
+  // Imprime o conteúdo do arquivo quando o botão 46 for pressionado
+  if ((timestamp2  - tempoUltimaLeituraTabela) > DEBOUNCE_TIME) {
+    estadoAtual = digitalRead(46);
+    if (estadoAtual == HIGH && estadoAnteriorBotao13 == LOW) {
+      Serial.println("Verificando conteúdo do arquivo");
+
+      if (dataFile) {  // Verifica se o arquivo foi aberto corretamente
+      dataFile.seek(0);
+      Serial.println("Conteúdo do arquivo:");
+        while (dataFile.available()) {
+          Serial.write(dataFile.read());  // Lê e imprime o conteúdo
+        }
+      } else {
+          Serial.println("Falha ao abrir o arquivo para leitura.");
+        }
+      tempoUltimaLeituraTabela = timestamp2 ;
+      }
+    estadoAnteriorBotao13 = estadoAtual;
+  }
+}
+
+void loop() {
+
+
+  // Calcula o timestamp com base no tempo atual
+  timestamp2 = tempo_atual + TCNT1;
+  
+  if(contadorTabela > 3){
+    gravarTabelaNoCartao();
+    Serial.println(contadorTabela);
+  } 
+  
+imprimirCartaoSD();
+
+
+  /*
+  // Verifica se o LED verde deve apagar após o tempo de 500ms
+  if (blinkando && tempo_atual >= tempoPiscar) {
+    // Desliga o LED verde
+    digitalWrite(pinLEDVERDE, LOW);
+    // Para de piscar até o próximo evento
+    blinkando = false;
+  }
+  
+  // Verifica se passou 1 segundo (2.000.000 ticks)
+  if (timestamp2 - tempoUltimoRed >= 2000000) {  // 2.000.000 ticks = 1 segundo
+    // Liga o LED vermelho
+    digitalWrite(pinLEDVERMELHO, HIGH);
+    // Atualiza o tempo do último acionamento do LED vermelho
+    tempoUltimoRed = timestamp2;
+    // Desliga o LED vermelho após 500ms
+    unsigned long tempoDesligarRed = timestamp2 + 500000; // 500ms após o acionamento
+    // Desliga o LED vermelho
+    digitalWrite(pinLEDVERMELHO, LOW);
+  }*/
+}

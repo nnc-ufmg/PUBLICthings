@@ -1,0 +1,55 @@
+#define DEBOUNCE_TIME 70
+
+const int pino1 = 2;
+const int pino2 = 3;
+const int pino3 = 4;
+const int pino4 = 5;
+const int pinoBotao = 22;
+
+unsigned long tempoAtual;
+unsigned long tempoAnterior4 = 0;
+const int duracaoHigh = 2000; // 2 segundos
+bool estadoAnteriorBotao = LOW;
+bool estadoAtual;
+unsigned long tempoUltimaLeituraTabela = 0; //marca o último tempo em que o botão foi pressionado
+
+void setup() {
+  pinMode(pino1, OUTPUT);
+  pinMode(pino2, OUTPUT);
+  pinMode(pino3, OUTPUT);
+  pinMode(pino4, OUTPUT);
+  pinMode(pinoBotao, INPUT_PULLUP); 
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  tempoAtual = millis();
+  /*
+  digitalWrite(pino1, HIGH);
+  digitalWrite(pino1,LOW);
+  delay(2);
+  digitalWrite(pino2, HIGH);
+  digitalWrite(pino2, LOW);
+  delay(3);
+  digitalWrite(pino3, HIGH);
+  digitalWrite(pino3, LOW);
+  delay(3000);*/
+  
+
+  if ((millis() - tempoUltimaLeituraTabela) > DEBOUNCE_TIME) {
+    estadoAtual = digitalRead(pinoBotao);
+    
+    if (estadoAtual == LOW && estadoAnteriorBotao == HIGH) {  // LOW porque é INPUT_PULLUP
+      Serial.println("apertou");
+      digitalWrite(pino1, HIGH);
+      digitalWrite(pino1, LOW);
+      digitalWrite(pino4, HIGH);
+      delay(10);
+      digitalWrite(pino4, LOW);  // desligar depois do delay
+      tempoUltimaLeituraTabela = millis();
+    }
+
+    estadoAnteriorBotao = estadoAtual;
+  }
+}
